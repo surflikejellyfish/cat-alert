@@ -22,23 +22,25 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
 
       - name: Run script
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-        run: python cat_monitor.py
+        run: |
+          python cat_monitor.py
 
-      - name: Commit seen.json
-  run: |
-    if [ -f seen.json ]; then
-      git config user.name "github-actions"
-      git config user.email "github-actions@github.com"
-      git add seen.json
-      git diff --cached --quiet || git commit -m "Update seen cats"
-      git push
-    else
-      echo "No seen.json yet"
-    fi
+      - name: Commit seen.json if exists
+        run: |
+          if [ -f seen.json ]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add seen.json
+            git diff --cached --quiet || git commit -m "Update seen cats"
+            git push
+          else
+            echo "No seen.json yet"
+          fi
