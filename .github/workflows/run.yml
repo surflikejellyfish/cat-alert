@@ -32,9 +32,13 @@ jobs:
         run: python cat_monitor.py
 
       - name: Commit seen.json
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add seen.json
-          git diff --cached --quiet || git commit -m "Update seen cats"
-          git push
+  run: |
+    if [ -f seen.json ]; then
+      git config user.name "github-actions"
+      git config user.email "github-actions@github.com"
+      git add seen.json
+      git diff --cached --quiet || git commit -m "Update seen cats"
+      git push
+    else
+      echo "No seen.json yet"
+    fi
