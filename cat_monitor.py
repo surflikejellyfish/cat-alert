@@ -1,38 +1,49 @@
 import requests
+from bs4 import BeautifulSoup
 import json
 import smtplib
 from email.mime.text import MIMEText
 import os
 
-URL = "https://toolkit.rescuegroups.org/of/f?c=97&species=cat&sex=female&age=Baby,Young"
+URL = "https://lifelineanimal.org/adopt/?Species_1=Cat&Sex_1=Female&Age_1=%3C6&Age_2=6-12"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
+
 def get_cats():
     response = requests.get(URL, headers=HEADERS)
-    data = response.json()
-    
-    cats = []
-    for animal in data["data"]:
-        name = animal["name"]
-        age = animal["ageGroup"]
-        location = animal["locationName"]
-        url = animal["url"]
+    soup = BeautifulSoup(response.text, "html.parser")
 
-        if location in [
+    cats = []
+
+    cards = soup.select(".grid-item")
+
+    for card in cards:
+        name = card.select_one(".field--name-title")
+        link = card.select_one("a")
+
+        if not name or not link:
+            continue
+
+        name = name.text.strip()
+        url = "https://lifelineanimal.org" + link["href"]
+
+        # 简单过滤 location（页面里会带）
+        text = card.text
+
+        if any(loc in text for loc in [
             "LifeLine Community Animal Center",
             "Fulton County Animal Services",
             "DeKalb County Animal Services"
-        ]:
+        ]):
             cats.append({
-                "id": animal["id"],
+                "id": url,
                 "name": name,
-                "age": age,
-                "location": location,
                 "url": url
             })
+
     return cats
 
 
@@ -55,7 +66,7 @@ def send_email(new_cats):
 
     body = "New cats found:\n\n"
     for cat in new_cats:
-        body += f"{cat['name']} | {cat['age']} | {cat['location']}\n{cat['url']}\n\n"
+        body += f"{cat['name']}\n{cat['url']}\n\n"
 
     msg = MIMEText(body)
     msg["Subject"] = "🐱 New kittens available!"
