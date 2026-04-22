@@ -80,15 +80,18 @@ def send_email(new_cats):
 
 def main():
     cats = get_cats()
-    seen = load_seen()
+    print(f"Found {len(cats)} matching cats.")
 
+    seen = load_seen()
     new_cats = [c for c in cats if c["id"] not in seen]
+
+    print(f"Found {len(new_cats)} new cats.")
 
     if new_cats:
         send_email(new_cats)
+        print("Email sent.")
+    else:
+        print("No new cats.")
 
     save_seen([c["id"] for c in cats])
-
-
-if __name__ == "__main__":
-    main()
+    print("Saved seen.json.")
